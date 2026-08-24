@@ -8,7 +8,7 @@ pipeline{
 
         SERVER_USERNAME = "deployer"
         SERVER_IP = "dev-test01.homelab"
-        SERVER_CONNECTION = "${SERVER_USERNAME}" + " " + "${SERVER_IP}"
+        SERVER_CONNECTION = "${SERVER_USERNAME}" + "@" + "${SERVER_IP}"
     }
 
     stages{
