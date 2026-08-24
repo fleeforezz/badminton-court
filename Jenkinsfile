@@ -46,18 +46,26 @@ pipeline{
         stage('Deploy') {
             steps {
                 sshagent(['production-srv']) {
-                    sh"""
-                    ssh -o StrictHostKeyChecking=no ${SERVER_CONNECTION} \
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ${SERVER_CONNECTION} '
+                            set -e
 
-                    'docker pull ${DOCKER_IMAGE} && 
+                            echo "Pulling Docker image..."
+                            docker pull ${DOCKER_IMAGE}
 
-                    docker stop ${APP_NAME} || true && 
-                    docker rm ${APP_NAME} || true &&
+                            echo "Removing old container..."
+                            docker rm -f ${APP_NAME} 2>/dev/null || true
 
-                    docker run -d -p 1234:80 \
-                    --name ${APP_NAME} \
-                    --restart unless-stopped \
-                    ${DOCKER_IMAGE}'
+                            echo "Starting new container..."
+                            docker run -d \\
+                                -p 1234:80 \\
+                                --name ${APP_NAME} \\
+                                --restart unless-stopped \\
+                                ${DOCKER_IMAGE}
+
+                            echo "Deployment successful"
+                            docker ps --filter "name=${APP_NAME}"
+                        '
                     """
                 }
             }
