@@ -23,7 +23,7 @@ pipeline{
         // ------------------------------------------------------------
         stage('Docker build') {
             steps {
-                sh "sudo docker build --pull -t ${DOCKER_IMAGE} ."
+                sh "docker build --pull -t ${DOCKER_IMAGE} ."
             }
         }
 
@@ -34,7 +34,7 @@ pipeline{
             steps {
                 script {
                     withDockerRegistry(credentialsId: 'Docker_Login', url: 'https://index.docker.io/v1/') {
-                        sh "sudo docker push ${DOCKER_IMAGE}"
+                        sh "docker push ${DOCKER_IMAGE}"
                     }
                 }
             }
@@ -49,12 +49,12 @@ pipeline{
                     sh"""
                     ssh -o StrictHostKeyChecking=no ${SERVER_CONNECTION} \
 
-                    sudo docker pull ${DOCKER_IMAGE} && 
+                    docker pull ${DOCKER_IMAGE} && 
 
-                    sudo docker stop ${APP_NAME} || true && 
-                    sudo docker rm ${APP_NAME} || true &&
+                    docker stop ${APP_NAME} || true && 
+                    docker rm ${APP_NAME} || true &&
 
-                    sudo docker run -d -p 1234:80 \
+                    docker run -d -p 1234:80 \
                     --name ${APP_NAME} \
                     --restart unless-stopped \
                     ${DOCKER_IMAGE}'
