@@ -46,7 +46,7 @@ function renderPlayers() {
       <div class="shuttle-idx">${i + 1}</div>
       <input type="text" value="${p.name}" data-idx="${i}" data-field="name" />
       <div class="hours-wrap">
-        <input type="number" min="0" step="0.5" value="${p.hours}" data-idx="${i}" data-field="hours" />
+        <input type="number" min="0" step="0.25" value="${p.hours}" data-idx="${i}" data-field="hours" />
         <span>giờ</span>
       </div>
       <button class="remove-btn" data-idx="${i}" title="Xóa người này">×</button>
@@ -96,24 +96,34 @@ function compute() {
     const grandCostBase = courtTotal + shuttleTotal + waterTotal;
     const baseRate = players.length > 0 ? grandCostBase / players.length : 0;
 
-    // Extra-time cost: split among only the people who stayed extra, hour by hour,
-    // so someone playing 3h doesn't pay the full extra-hour rate alone —
-    // it's shared with everyone else who also stayed that extra hour.
+    // Extra-time cost: split among only the people who stayed extra.
+    // Instead of stepping by a fixed chunk (which breaks for odd minutes like
+    // 1h15 or 1h45), we build the timeline from the *actual* hour values
+    // everyone reported, then split each segment's cost only among the
+    // people who were still playing through that segment. This handles any
+    // fraction of an hour (15/30/45 minutes, or anything else) exactly.
     const extraCost = {};
     players.forEach(p => extraCost[p.id] = 0);
 
-    const STEP = 0.5;
-    const maxHours = players.reduce((m, p) => Math.max(m, p.hours), courtHours);
-    for (let t = courtHours; t < maxHours - 1e-9; t += STEP) {
-        const stayers = players.filter(p => p.hours >= t + STEP - 1e-9);
-        if (stayers.length === 0) continue;
-        const slotCost = courtFeePerHour * numCourts * STEP;
-        const perStayer = slotCost / stayers.length;
-        stayers.forEach(p => extraCost[p.id] += perStayer);
-    }
+    const marks = new Set([courtHours]);
+    players.forEach(p => { if (p.hours > courtHours + 1e-9) marks.add(p.hours); });
+    const timeline = Array.from(marks).sort((a, b) => a - b);
 
     let extraTotal = 0;
-    Object.values(extraCost).forEach(v => extraTotal += v);
+    for (let i = 0; i < timeline.length - 1; i++) {
+        const segStart = timeline[i];
+        const segEnd = timeline[i + 1];
+        const duration = segEnd - segStart;
+        if (duration <= 1e-9) continue;
+
+        const stayers = players.filter(p => p.hours >= segEnd - 1e-9);
+        if (stayers.length === 0) continue;
+
+        const segCost = courtFeePerHour * numCourts * duration;
+        const share = segCost / stayers.length;
+        stayers.forEach(p => extraCost[p.id] += share);
+        extraTotal += segCost;
+    }
 
     els.resultsList.innerHTML = '';
     let grandCollected = 0;

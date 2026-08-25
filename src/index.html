@@ -32,8 +32,8 @@
         </div>
         <div class="field">
           <label for="courtHours">Số giờ thuê sân</label>
-          <input type="number" id="courtHours" min="0" step="0.5" value="2" inputmode="decimal">
-          <div class="unit">giờ</div>
+          <input type="number" id="courtHours" min="0" step="0.25" value="2" inputmode="decimal">
+          <div class="unit">giờ (15 phút = 0.25, 30 phút = 0.5, 45 phút = 0.75)</div>
         </div>
         <div class="field">
           <label for="numCourts">Số lượng sân đã đặt</label>
@@ -78,8 +78,9 @@
 
     <div class="card">
       <h2><span class="num">2</span>Người chơi & giờ chơi</h2>
-      <p class="hint">Mặc định mỗi người chơi đúng bằng "Số giờ thuê sân" ở trên. Nếu ai ở lại chơi thêm giờ, chỉ cần
-        sửa số giờ của người đó — phần giờ dư sẽ được cộng thêm tiền sân theo giờ vào đơn giá của riêng họ.</p>
+      <p class="hint">Mặc định mỗi người chơi đúng bằng "Số giờ thuê sân" ở trên. Nếu ai ở lại chơi thêm giờ (kể cả lẻ
+        15/30/45 phút, ví dụ 1.25 = 1h15, 1.5 = 1h30, 2.75 = 2h45), chỉ cần sửa số giờ của người đó — phần giờ dư sẽ
+        được cộng thêm tiền sân theo đúng khoảng thời gian họ ở lại, chia đều cho những ai chơi cùng khoảng đó.</p>
       <div class="grid">
         <div class="field">
           <label for="numPlayers">Số người tham gia</label>
