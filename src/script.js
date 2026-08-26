@@ -15,6 +15,9 @@ const els = {
     resultsList: document.getElementById('resultsList'),
     grandTotal: document.getElementById('grandTotal'),
     grandTotalSplit: document.getElementById('grandTotalSplit'),
+    mobileSummaryTotal: document.getElementById('mobileSummaryTotal'),
+    mobileSummaryBtn: document.getElementById('mobileSummaryBtn'),
+    resultsCard: document.getElementById('resultsCard'),
 };
 
 let players = [];
@@ -149,6 +152,7 @@ function compute() {
 
     els.grandTotal.textContent = fmt(grandCollected);
     els.grandTotalSplit.textContent = `${fmt(courtTotal)} · ${fmt(shuttleTotal)} · ${fmt(waterTotal)}${extraTotal > 0.5 ? ` · +${fmt(extraTotal)} giờ thêm` : ''}`;
+    if (els.mobileSummaryTotal) els.mobileSummaryTotal.textContent = fmt(grandCollected);
 }
 
 ['courtFee', 'courtHours', 'numCourts', 'tubePrice', 'shuttlesPerTube', 'shuttlesUsed', 'waterCups', 'waterPrice'].forEach(id => {
@@ -164,3 +168,27 @@ els.addPlayerBtn.addEventListener('click', () => {
 });
 
 syncPlayerCount();
+
+if (els.mobileSummaryBtn && els.resultsCard) {
+    els.mobileSummaryBtn.addEventListener('click', () => {
+        els.resultsCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+}
+
+// ---- Tabs: switch between "Chi phí buổi chơi" and "Người chơi & giờ chơi" ----
+const tabBtns = document.querySelectorAll('.tab-btn');
+const tabPanels = document.querySelectorAll('.tab-panel');
+tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        tabBtns.forEach(b => {
+            b.classList.remove('active');
+            b.setAttribute('aria-selected', 'false');
+        });
+        tabPanels.forEach(p => { p.hidden = true; });
+
+        btn.classList.add('active');
+        btn.setAttribute('aria-selected', 'true');
+        const panel = document.getElementById('tab-' + btn.dataset.tab);
+        if (panel) panel.hidden = false;
+    });
+});

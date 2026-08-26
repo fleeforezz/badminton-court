@@ -3,8 +3,9 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Host Cầu Lông</title>
-  <!-- <link rel="shortcut icon" href="./images/coffee-cup.png" type="image/x-icon"> -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Badminton host portal</title>
+  <link rel="shortcut icon" href="assets/badminton.png" type="image/x-icon">
   <link rel="stylesheet" href="style.css">
 </head>
 
@@ -13,111 +14,147 @@
 
     <div class="scoreboard">
       <p class="eyebrow">Bảng chia tiền sau buổi chơi</p>
-      <h1>HOST CẦU LÔNG</h1>
+      <h1>Badminton Host Portal</h1>
       <!-- <p class="sub">Nhập chi phí sân & cầu, thêm người chơi và số giờ mỗi người ở lại sân — hệ thống tự tính phần ai
         người nấy trả, kể cả khi có người chơi 2 tiếng, có người chơi 3 tiếng.</p> -->
     </div>
 
-    <div class="card">
-      <h2><span class="num">1</span>Chi phí buổi chơi</h2>
-      <p class="hint">Nhập chi phí sân, cầu và nước — toàn bộ sẽ được gộp lại và chia theo số giờ chơi của từng người ở
-        bước dưới.</p>
+    <div class="layout">
+      <main class="main-col">
 
-      <div class="group-title">Tiền sân</div>
-      <div class="grid">
-        <div class="field">
-          <label for="courtFee">Tiền sân (1 giờ / 1 sân)</label>
-          <input type="number" id="courtFee" min="0" value="80000" inputmode="numeric">
-          <div class="unit">VNĐ / giờ / sân</div>
-        </div>
-        <div class="field">
-          <label for="courtHours">Số giờ thuê sân</label>
-          <input type="number" id="courtHours" min="0" step="0.25" value="2" inputmode="decimal">
-          <div class="unit">giờ (15 phút = 0.25, 30 phút = 0.5, 45 phút = 0.75)</div>
-        </div>
-        <div class="field">
-          <label for="numCourts">Số lượng sân đã đặt</label>
-          <input type="number" id="numCourts" min="1" value="2" inputmode="numeric">
-          <div class="unit">sân</div>
-        </div>
-      </div>
+        <div class="card tab-card">
 
-      <div class="group-title">Tiền cầu</div>
-      <div class="grid">
-        <div class="field">
-          <label for="tubePrice">Tổng tiền 1 ống cầu</label>
-          <input type="number" id="tubePrice" min="0" value="295000" inputmode="numeric">
-          <div class="unit">VNĐ / ống</div>
-        </div>
-        <div class="field">
-          <label for="shuttlesPerTube">Số lượng cầu trong ống</label>
-          <input type="number" id="shuttlesPerTube" min="1" value="12" inputmode="numeric">
-          <div class="unit">quả / ống</div>
-        </div>
-        <div class="field">
-          <label for="shuttlesUsed">Số cầu đã dùng trong buổi</label>
-          <input type="number" id="shuttlesUsed" min="0" value="12" inputmode="numeric">
-          <div class="unit">quả</div>
-        </div>
-      </div>
+          <div class="tabs" role="tablist">
+            <button class="tab-btn active" type="button" role="tab" aria-selected="true" aria-controls="tab-cost"
+              id="tabbtn-cost" data-tab="cost">
+              <span class="num">1</span>Chi phí buổi chơi
+            </button>
+            <button class="tab-btn" type="button" role="tab" aria-selected="false" aria-controls="tab-players"
+              id="tabbtn-players" data-tab="players">
+              <span class="num">2</span>Người chơi & giờ chơi
+            </button>
+          </div>
 
-      <div class="group-title">Nước uống</div>
-      <div class="grid">
-        <div class="field">
-          <label for="waterCups">Số ca nước đã đặt</label>
-          <input type="number" id="waterCups" min="0" value="0" inputmode="numeric">
-          <div class="unit">ca</div>
+          <div class="tab-panel" id="tab-cost" role="tabpanel" aria-labelledby="tabbtn-cost">
+            <p class="hint">Nhập chi phí sân, cầu và nước — toàn bộ sẽ được gộp lại và chia theo số giờ chơi của từng
+              người ở tab kế bên.</p>
+
+            <div class="group-title">Tiền sân</div>
+            <div class="field-chip">
+              <div class="grid">
+                <div class="field">
+                  <label for="courtFee">Tiền sân (1 giờ / 1 sân)</label>
+                  <input type="number" id="courtFee" min="0" placeholder="80000" inputmode="numeric">
+                  <div class="unit">VNĐ / giờ / sân</div>
+                </div>
+                <div class="field">
+                  <label for="courtHours">Số giờ thuê sân</label>
+                  <input type="number" id="courtHours" min="0" step="0.25" placeholder="2" inputmode="decimal">
+                  <div class="unit">giờ (15p = 0.25 · 30p = 0.5 · 45p = 0.75)</div>
+                </div>
+                <div class="field">
+                  <label for="numCourts">Số lượng sân đã đặt</label>
+                  <input type="number" id="numCourts" min="1" placeholder="2" inputmode="numeric">
+                  <div class="unit">sân</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="group-title">Tiền cầu</div>
+            <div class="field-chip">
+              <div class="grid">
+                <div class="field">
+                  <label for="tubePrice">Tổng tiền 1 ống cầu</label>
+                  <input type="number" id="tubePrice" min="0" placeholder="295000" inputmode="numeric">
+                  <div class="unit">VNĐ / ống</div>
+                </div>
+                <div class="field">
+                  <label for="shuttlesPerTube">Số lượng cầu trong ống</label>
+                  <input type="number" id="shuttlesPerTube" min="1" placeholder="12" inputmode="numeric">
+                  <div class="unit">quả / ống</div>
+                </div>
+                <div class="field">
+                  <label for="shuttlesUsed">Số cầu đã dùng trong buổi</label>
+                  <input type="number" id="shuttlesUsed" min="0" placeholder="12" inputmode="numeric">
+                  <div class="unit">quả</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="group-title">Nước uống</div>
+            <div class="field-chip">
+              <div class="grid">
+                <div class="field">
+                  <label for="waterCups">Số ca nước đã đặt</label>
+                  <input type="number" id="waterCups" min="0" placeholder="0" inputmode="numeric">
+                  <div class="unit">ca</div>
+                </div>
+                <div class="field">
+                  <label for="waterPrice">Số tiền của 1 ca nước</label>
+                  <input type="number" id="waterPrice" min="0" placeholder="0" inputmode="numeric">
+                  <div class="unit">VNĐ / ca</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-panel" id="tab-players" role="tabpanel" aria-labelledby="tabbtn-players" hidden>
+            <p class="hint">Mặc định mỗi người chơi đúng bằng "Số giờ thuê sân" ở tab Chi phí. Nếu ai ở lại chơi thêm
+              giờ (kể cả lẻ 15/30/45 phút, ví dụ 1.25 = 1h15, 1.5 = 1h30, 2.75 = 2h45), chỉ cần sửa số giờ của người
+              đó — phần giờ dư sẽ được cộng thêm tiền sân theo đúng khoảng thời gian họ ở lại, chia đều cho những ai
+              chơi cùng khoảng đó.</p>
+            <div class="grid" style="grid-template-columns:1fr;">
+              <div class="field">
+                <label for="numPlayers">Số người tham gia</label>
+                <input type="number" id="numPlayers" min="1" placeholder="4" inputmode="numeric">
+              </div>
+            </div>
+
+            <div class="players" id="playersList" style="margin-top:16px;"></div>
+
+            <div class="row-actions">
+              <button class="add-btn" id="addPlayerBtn" type="button">+ Thêm người chơi</button>
+              <span class="sync-note">Sửa số người ở trên để tự thêm/bớt dòng</span>
+            </div>
+          </div>
+
         </div>
-        <div class="field">
-          <label for="waterPrice">Số tiền của 1 ca nước</label>
-          <input type="number" id="waterPrice" min="0" value="0" inputmode="numeric">
-          <div class="unit">VNĐ / ca</div>
+
+      </main>
+
+      <aside class="summary-col">
+        <div class="card results-card" id="resultsCard">
+          <h2><span class="num">3</span>Kết quả chia tiền</h2>
+          <p class="hint">Tổng chi phí (sân + cầu + nước) được gộp lại và chia theo đơn giá mỗi giờ-người.</p>
+          <div id="resultsList"></div>
+          <div class="totals-strip">
+            <div>
+              <div class="lbl">Tổng cộng cả buổi</div>
+              <div class="val" id="grandTotal">0đ</div>
+            </div>
+            <div style="text-align:right">
+              <div class="lbl">Sân · Cầu · Nước</div>
+              <div class="val" id="grandTotalSplit" style="font-size:13px;color:var(--ink-soft);">—</div>
+            </div>
+          </div>
+          <!-- <div class="footnote">
+            <b>Cách tính:</b> Đơn giá cơ bản = (Tổng tiền sân + Tổng tiền cầu + Tổng tiền nước) ÷ Số người tham gia —
+            ai chơi đúng số giờ thuê sân thì trả đúng phần này. Với những giờ chơi thêm, tiền thuê sân phát sinh của
+            giờ thêm đó được <b>chia đều cho những người cùng ở lại chơi thêm giờ đó</b>, rồi cộng vào phần của riêng
+            họ — không phải mỗi người tự gánh nguyên giá giờ thêm.
+          </div> -->
         </div>
-      </div>
+      </aside>
     </div>
 
-    <div class="card">
-      <h2><span class="num">2</span>Người chơi & giờ chơi</h2>
-      <p class="hint">Mặc định mỗi người chơi đúng bằng "Số giờ thuê sân" ở trên. Nếu ai ở lại chơi thêm giờ (kể cả lẻ
-        15/30/45 phút, ví dụ 1.25 = 1h15, 1.5 = 1h30, 2.75 = 2h45), chỉ cần sửa số giờ của người đó — phần giờ dư sẽ
-        được cộng thêm tiền sân theo đúng khoảng thời gian họ ở lại, chia đều cho những ai chơi cùng khoảng đó.</p>
-      <div class="grid">
-        <div class="field">
-          <label for="numPlayers">Số người tham gia</label>
-          <input type="number" id="numPlayers" min="1" value="4" inputmode="numeric">
-        </div>
-      </div>
+  </div>
 
-      <div class="players" id="playersList" style="margin-top:16px;"></div>
-
-      <div class="row-actions">
-        <button class="add-btn" id="addPlayerBtn" type="button">+ Thêm người chơi</button>
-        <span class="sync-note">Sửa số người ở trên để tự thêm/bớt dòng</span>
-      </div>
+  <div class="mobile-summary-bar" id="mobileSummaryBar">
+    <div>
+      <div class="msb-label">Tổng cộng cả buổi</div>
+      <div class="msb-amount" id="mobileSummaryTotal">0đ</div>
     </div>
-
-    <div class="card results-card">
-      <h2><span class="num">3</span>Kết quả chia tiền</h2>
-      <p class="hint">Tổng chi phí (sân + cầu + nước) được gộp lại và chia theo đơn giá mỗi giờ-người.</p>
-      <div id="resultsList"></div>
-      <div class="totals-strip">
-        <div>
-          <div class="lbl">Tổng cộng cả buổi</div>
-          <div class="val" id="grandTotal">0đ</div>
-        </div>
-        <div style="text-align:right">
-          <div class="lbl">Sân · Cầu · Nước</div>
-          <div class="val" id="grandTotalSplit" style="font-size:14px;color:var(--court-line);">—</div>
-        </div>
-      </div>
-      <!-- <div class="footnote">
-        <b>Cách tính:</b> Đơn giá cơ bản = (Tổng tiền sân + Tổng tiền cầu + Tổng tiền nước) ÷ Số người tham gia — ai
-        chơi đúng số giờ thuê sân thì trả đúng phần này. Với những giờ chơi thêm (ví dụ 3 giờ thay vì 2 giờ), tiền thuê
-        sân phát sinh của giờ thêm đó (Tiền sân 1 giờ/1 sân × số sân) được <b>chia đều cho những người cùng ở lại chơi
-          thêm giờ đó</b>, rồi cộng vào phần của riêng họ — không phải mỗi người tự gánh nguyên giá giờ thêm.
-      </div> -->
-    </div>
-
+    <button type="button" id="mobileSummaryBtn">Xem chi tiết</button>
   </div>
 
   <script src="script.js"></script>
