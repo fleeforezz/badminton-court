@@ -18,7 +18,18 @@ const els = {
     mobileSummaryTotal: document.getElementById('mobileSummaryTotal'),
     mobileSummaryBtn: document.getElementById('mobileSummaryBtn'),
     resultsCard: document.getElementById('resultsCard'),
+    bankSelect: document.getElementById('bankSelect'),
+    bankAccountNumber: document.getElementById('bankAccountNumber'),
+    bankAccountName: document.getElementById('bankAccountName'),
+    qrPersonSelect: document.getElementById('qrPersonSelect'),
+    transferMemo: document.getElementById('transferMemo'),
+    qrImage: document.getElementById('qrImage'),
+    qrAmountLabel: document.getElementById('qrAmountLabel'),
+    qrMemoLabel: document.getElementById('qrMemoLabel'),
 };
+
+let lastResults = [];
+let lastGrandTotal = 0;
 
 let players = [];
 let nextPlayerId = 1;

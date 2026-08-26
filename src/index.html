@@ -33,6 +33,10 @@
               id="tabbtn-players" data-tab="players">
               <span class="num">2</span>Người chơi & giờ chơi
             </button>
+            <button class="tab-btn" type="button" role="tab" aria-selected="false" aria-controls="tab-qr"
+              id="tabbtn-qr" data-tab="qr">
+              <span class="num">3</span>QR chuyển khoản
+            </button>
           </div>
 
           <div class="tab-panel" id="tab-cost" role="tabpanel" aria-labelledby="tabbtn-cost">
@@ -118,13 +122,23 @@
             </div>
           </div>
 
+          <div class="tab-panel" id="tab-qr" role="tabpanel" aria-labelledby="tabbtn-qr" hidden>
+            <p class="hint">Mã QR chuyển khoản của bạn — người chơi quét để chuyển tiền.</p>
+
+            <div class="qr-frame">
+              <img src="assets/qr-code.png" alt="Mã QR chuyển khoản">
+            </div>
+            <p class="footnote">Thay file <code>assets/qr-code.png</code> bằng ảnh mã QR chuyển khoản thật của bạn
+              (xuất từ app ngân hàng) để hiển thị ở đây.</p>
+          </div>
+
         </div>
 
       </main>
 
       <aside class="summary-col">
         <div class="card results-card" id="resultsCard">
-          <h2><span class="num">3</span>Kết quả chia tiền</h2>
+          <h2><span class="num">4</span>Kết quả chia tiền</h2>
           <p class="hint">Tổng chi phí (sân + cầu + nước) được gộp lại và chia theo đơn giá mỗi giờ-người.</p>
           <div id="resultsList"></div>
           <div class="totals-strip">
