@@ -18,18 +18,7 @@ const els = {
     mobileSummaryTotal: document.getElementById('mobileSummaryTotal'),
     mobileSummaryBtn: document.getElementById('mobileSummaryBtn'),
     resultsCard: document.getElementById('resultsCard'),
-    bankSelect: document.getElementById('bankSelect'),
-    bankAccountNumber: document.getElementById('bankAccountNumber'),
-    bankAccountName: document.getElementById('bankAccountName'),
-    qrPersonSelect: document.getElementById('qrPersonSelect'),
-    transferMemo: document.getElementById('transferMemo'),
-    qrImage: document.getElementById('qrImage'),
-    qrAmountLabel: document.getElementById('qrAmountLabel'),
-    qrMemoLabel: document.getElementById('qrMemoLabel'),
 };
-
-let lastResults = [];
-let lastGrandTotal = 0;
 
 let players = [];
 let nextPlayerId = 1;
@@ -95,7 +84,7 @@ function compute() {
     const courtFeePerHour = parseFloat(els.courtFee.value) || 0;
     const courtHours = parseFloat(els.courtHours.value) || 0;
     const numCourts = Math.max(1, parseFloat(els.numCourts.value) || 1);
-    const courtTotal = courtFeePerHour * courtHours * numCourts;
+    const courtBooked = courtFeePerHour * courtHours * numCourts;
 
     const tubePrice = parseFloat(els.tubePrice.value) || 0;
     const perTube = parseFloat(els.shuttlesPerTube.value) || 1;
@@ -107,23 +96,31 @@ function compute() {
     const waterPrice = parseFloat(els.waterPrice.value) || 0;
     const waterTotal = waterCups * waterPrice;
 
-    const grandCostBase = courtTotal + shuttleTotal + waterTotal;
-    const baseRate = players.length > 0 ? grandCostBase / players.length : 0;
+    // Cầu + nước là chi phí dùng chung, không phụ thuộc số giờ chơi —
+    // vẫn chia đều cho tất cả người tham gia.
+    const consumablesTotal = shuttleTotal + waterTotal;
+    const consumablesRate = players.length > 0 ? consumablesTotal / players.length : 0;
 
-    // Extra-time cost: split among only the people who stayed extra.
-    // Instead of stepping by a fixed chunk (which breaks for odd minutes like
-    // 1h15 or 1h45), we build the timeline from the *actual* hour values
-    // everyone reported, then split each segment's cost only among the
-    // people who were still playing through that segment. This handles any
-    // fraction of an hour (15/30/45 minutes, or anything else) exactly.
-    const extraCost = {};
-    players.forEach(p => extraCost[p.id] = 0);
+    // Tiền sân: dựng "đường thời gian" từ 0 đến D (D = số giờ thuê sân, hoặc
+    // dài hơn nếu có người chơi thêm giờ). Ở mỗi khoảng thời gian, chỉ những
+    // ai còn đang chơi mới cùng chia nhau tiền sân của khoảng đó — nên người
+    // về sớm chỉ trả cho phần thời gian họ thực sự chơi (được giảm giá), còn
+    // người ở lại lâu hơn thì gánh thêm phần giờ dư (chia đều với những ai
+    // cũng ở lại chơi thêm giờ đó).
+    const courtShare = {};
+    players.forEach(p => courtShare[p.id] = 0);
 
-    const marks = new Set([courtHours]);
-    players.forEach(p => { if (p.hours > courtHours + 1e-9) marks.add(p.hours); });
+    const maxPlayed = players.reduce((m, p) => Math.max(m, p.hours), 0);
+    const D = Math.max(courtHours, maxPlayed);
+
+    const marks = new Set([0, D]);
+    players.forEach(p => {
+        const h = Math.min(Math.max(p.hours, 0), D);
+        if (h > 0) marks.add(h);
+    });
     const timeline = Array.from(marks).sort((a, b) => a - b);
 
-    let extraTotal = 0;
+    let courtCollected = 0;
     for (let i = 0; i < timeline.length - 1; i++) {
         const segStart = timeline[i];
         const segEnd = timeline[i + 1];
@@ -135,23 +132,23 @@ function compute() {
 
         const segCost = courtFeePerHour * numCourts * duration;
         const share = segCost / stayers.length;
-        stayers.forEach(p => extraCost[p.id] += share);
-        extraTotal += segCost;
+        stayers.forEach(p => courtShare[p.id] += share);
+        courtCollected += segCost;
     }
+
+    const extraTotal = Math.max(0, courtCollected - courtBooked);
 
     els.resultsList.innerHTML = '';
     let grandCollected = 0;
 
     players.forEach(p => {
-        const myExtra = extraCost[p.id] || 0;
-        const total = baseRate + myExtra;
+        const myCourt = courtShare[p.id] || 0;
+        const total = myCourt + consumablesRate;
         grandCollected += total;
 
         const row = document.createElement('div');
         row.className = 'result-row';
-        const breakdown = myExtra > 0.5
-            ? `Đơn giá cơ bản ${fmt(baseRate)} + phần sân giờ thêm (chia đều) ${fmt(myExtra)}`
-            : `Đơn giá cơ bản (${courtHours}h)`;
+        const breakdown = `Tiền sân (${p.hours}h): ${fmt(myCourt)} + Cầu & nước: ${fmt(consumablesRate)}`;
         row.innerHTML = `
       <div class="name">${p.name || '—'}</div>
       <div class="hrs">${p.hours}h</div>
@@ -162,7 +159,7 @@ function compute() {
     });
 
     els.grandTotal.textContent = fmt(grandCollected);
-    els.grandTotalSplit.textContent = `${fmt(courtTotal)} · ${fmt(shuttleTotal)} · ${fmt(waterTotal)}${extraTotal > 0.5 ? ` · +${fmt(extraTotal)} giờ thêm` : ''}`;
+    els.grandTotalSplit.textContent = `${fmt(courtCollected)} sân · ${fmt(shuttleTotal)} cầu · ${fmt(waterTotal)} nước${extraTotal > 0.5 ? ` · +${fmt(extraTotal)} giờ thêm` : ''}`;
     if (els.mobileSummaryTotal) els.mobileSummaryTotal.textContent = fmt(grandCollected);
 }
 
