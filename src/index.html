@@ -37,6 +37,10 @@
               id="tabbtn-qr" data-tab="qr">
               <span class="num">3</span>QR chuyển khoản
             </button>
+            <button class="tab-btn" type="button" role="tab" aria-selected="false" aria-controls="tab-rank"
+              id="tabbtn-rank" data-tab="rank">
+              <span class="num">4</span>Ghép cặp trình độ
+            </button>
           </div>
 
           <div class="tab-panel" id="tab-cost" role="tabpanel" aria-labelledby="tabbtn-cost">
@@ -103,10 +107,10 @@
           </div>
 
           <div class="tab-panel" id="tab-players" role="tabpanel" aria-labelledby="tabbtn-players" hidden>
-            <p class="hint">Mặc định mỗi người chơi đúng bằng "Số giờ thuê sân" ở tab Chi phí. Nếu ai ở lại chơi thêm
-              giờ (kể cả lẻ 15/30/45 phút, ví dụ 1.25 = 1h15, 1.5 = 1h30, 2.75 = 2h45), chỉ cần sửa số giờ của người
-              đó — phần giờ dư sẽ được cộng thêm tiền sân theo đúng khoảng thời gian họ ở lại, chia đều cho những ai
-              chơi cùng khoảng đó.</p>
+            <p class="hint">Mặc định mỗi người chơi đúng bằng "Số giờ thuê sân" ở tab Chi phí. Ai ở lại chơi thêm giờ
+              (kể cả lẻ 15/30/45 phút, ví dụ 1.25 = 1h15, 1.5 = 1h30, 2.75 = 2h45) sẽ được cộng thêm phần sân giờ dư,
+              chia đều với những ai cùng ở lại chơi thêm. Ngược lại, ai về sớm hơn cũng được <b>giảm giá tương ứng</b>
+              cho phần thời gian không chơi — chỉ cần sửa số giờ của người đó là hệ thống tự tính lại.</p>
             <div class="grid" style="grid-template-columns:1fr;">
               <div class="field">
                 <label for="numPlayers">Số người tham gia</label>
@@ -132,13 +136,73 @@
               (xuất từ app ngân hàng) để hiển thị ở đây.</p>
           </div>
 
+          <div class="tab-panel" id="tab-rank" role="tabpanel" aria-labelledby="tabbtn-rank" hidden>
+            <p class="hint">Nhập số trận thắng/thua của từng người — hệ thống sẽ tự xếp trình độ và gợi ý ghép cặp
+              đấu sao cho hai bên tương xứng nhau nhất có thể.</p>
+
+            <div class="group-title">Thành tích người chơi</div>
+            <div class="field-chip">
+              <div class="grid" style="grid-template-columns:1fr 140px;">
+                <div class="field">
+                  <label for="tierCount">Số bậc trình độ</label>
+                  <input type="number" id="tierCount" min="2" max="8" value="4" inputmode="numeric">
+                  <div class="unit">càng nhiều bậc càng chia nhỏ trình độ</div>
+                </div>
+                <div class="field">
+                  <label for="matchMode">Kiểu ghép cặp</label>
+                  <select id="matchMode">
+                    <option value="doubles">Đánh đôi (2 vs 2)</option>
+                    <option value="singles">Đánh đơn (1 vs 1)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="rating-header">
+                <span>Tên</span><span>Thắng</span><span>Thua</span><span></span>
+              </div>
+              <div class="ratingPlayers" id="ratingPlayersList"></div>
+
+              <div class="row-actions">
+                <button class="add-btn" id="addRatingBtn" type="button">+ Thêm người chơi</button>
+                <span class="sync-note">Nhập đúng số trận thắng/thua để xếp hạng chính xác</span>
+              </div>
+            </div>
+
+            <div class="group-title">Bảng xếp hạng trình độ</div>
+            <div class="field-chip" id="ratingResultsWrap">
+              <div class="rating-empty" id="ratingEmpty">Chưa có dữ liệu — thêm người chơi ở trên để xem xếp hạng.</div>
+              <table class="rating-table" id="ratingTable" hidden>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Tên</th>
+                    <th>T-B</th>
+                    <th>Tỷ lệ thắng</th>
+                    <th>Điểm</th>
+                    <th>Trình độ</th>
+                  </tr>
+                </thead>
+                <tbody id="ratingTableBody"></tbody>
+              </table>
+            </div>
+
+            <div class="group-title">Gợi ý ghép cặp đấu</div>
+            <div class="field-chip">
+              <p class="hint" style="margin-bottom:var(--sp-3);">Ghép người trình độ cao với người trình độ thấp
+                thành một đội (đôi) để tổng sức mạnh hai đội cân bằng, sau đó xếp các đội có sức mạnh gần nhau đấu với
+                nhau. Với đánh đơn, hệ thống ghép các đối thủ liền bậc để trận đấu sát nút.</p>
+              <button class="add-btn" id="generatePairsBtn" type="button">Ghép cặp ngay</button>
+              <div id="pairingResults" style="margin-top:var(--sp-4);"></div>
+            </div>
+          </div>
+
         </div>
 
       </main>
 
       <aside class="summary-col">
         <div class="card results-card" id="resultsCard">
-          <h2><span class="num">4</span>Kết quả chia tiền</h2>
+          <h2><span class="num">5</span>Kết quả chia tiền</h2>
           <p class="hint">Tổng chi phí (sân + cầu + nước) được gộp lại và chia theo đơn giá mỗi giờ-người.</p>
           <div id="resultsList"></div>
           <div class="totals-strip">

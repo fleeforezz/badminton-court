@@ -18,6 +18,15 @@ const els = {
     mobileSummaryTotal: document.getElementById('mobileSummaryTotal'),
     mobileSummaryBtn: document.getElementById('mobileSummaryBtn'),
     resultsCard: document.getElementById('resultsCard'),
+    tierCount: document.getElementById('tierCount'),
+    matchMode: document.getElementById('matchMode'),
+    ratingPlayersList: document.getElementById('ratingPlayersList'),
+    addRatingBtn: document.getElementById('addRatingBtn'),
+    ratingEmpty: document.getElementById('ratingEmpty'),
+    ratingTable: document.getElementById('ratingTable'),
+    ratingTableBody: document.getElementById('ratingTableBody'),
+    generatePairsBtn: document.getElementById('generatePairsBtn'),
+    pairingResults: document.getElementById('pairingResults'),
 };
 
 let players = [];
@@ -183,7 +192,7 @@ if (els.mobileSummaryBtn && els.resultsCard) {
     });
 }
 
-// ---- Tabs: switch between "Chi phí buổi chơi" and "Người chơi & giờ chơi" ----
+// ---- Tabs: switch between panels ----
 const tabBtns = document.querySelectorAll('.tab-btn');
 const tabPanels = document.querySelectorAll('.tab-panel');
 tabBtns.forEach(btn => {
@@ -200,3 +209,229 @@ tabBtns.forEach(btn => {
         if (panel) panel.hidden = false;
     });
 });
+
+// ==================================================================
+// Tab 4: xếp trình độ theo thắng/thua & gợi ý ghép cặp đấu
+// ==================================================================
+let ratingPlayers = [];
+let nextRatingId = 1;
+
+const TIER_NAMES = ['Giỏi', 'Khá', 'Trung bình', 'Yếu', 'Mới chơi', 'Tập sự'];
+
+function defaultRatingName(i) { return 'Người ' + (i + 1); }
+
+function addRatingPlayer(wins = 0, losses = 0) {
+    ratingPlayers.push({ id: nextRatingId++, name: defaultRatingName(ratingPlayers.length), wins, losses });
+    renderRatingRows();
+    updateRankings();
+}
+
+function removeRatingPlayer(idx) {
+    ratingPlayers.splice(idx, 1);
+    renderRatingRows();
+    updateRankings();
+}
+
+function renderRatingRows() {
+    if (!els.ratingPlayersList) return;
+    els.ratingPlayersList.innerHTML = '';
+    ratingPlayers.forEach((p, i) => {
+        const row = document.createElement('div');
+        row.className = 'rating-row';
+        row.innerHTML = `
+      <input type="text" value="${p.name}" data-idx="${i}" data-field="name" />
+      <input type="number" min="0" value="${p.wins}" data-idx="${i}" data-field="wins" />
+      <input type="number" min="0" value="${p.losses}" data-idx="${i}" data-field="losses" />
+      <button class="remove-btn" data-idx="${i}" title="Xóa người này">×</button>
+    `;
+        els.ratingPlayersList.appendChild(row);
+    });
+
+    els.ratingPlayersList.querySelectorAll('input[data-field="name"]').forEach(inp => {
+        inp.addEventListener('input', e => {
+            ratingPlayers[+e.target.dataset.idx].name = e.target.value;
+            updateRankings();
+        });
+    });
+    els.ratingPlayersList.querySelectorAll('input[data-field="wins"]').forEach(inp => {
+        inp.addEventListener('input', e => {
+            ratingPlayers[+e.target.dataset.idx].wins = Math.max(0, parseInt(e.target.value) || 0);
+            updateRankings();
+        });
+    });
+    els.ratingPlayersList.querySelectorAll('input[data-field="losses"]').forEach(inp => {
+        inp.addEventListener('input', e => {
+            ratingPlayers[+e.target.dataset.idx].losses = Math.max(0, parseInt(e.target.value) || 0);
+            updateRankings();
+        });
+    });
+    els.ratingPlayersList.querySelectorAll('.remove-btn').forEach(btn => {
+        btn.addEventListener('click', e => removeRatingPlayer(+e.target.dataset.idx));
+    });
+}
+
+// Điểm xếp hạng dùng Bayesian smoothing: người chơi ít trận không bị đội
+// lên hạng nhất chỉ vì thắng 1-2 trận may mắn — điểm được kéo về mức trung
+// bình (0.5) theo trọng số C, số trận càng nhiều thì điểm càng phản ánh
+// đúng thực lực.
+const BAYES_PRIOR_MATCHES = 4;
+const BAYES_PRIOR_WINRATE = 0.5;
+
+function computeRating(p) {
+    const total = p.wins + p.losses;
+    const rating = (p.wins + BAYES_PRIOR_MATCHES * BAYES_PRIOR_WINRATE) / (total + BAYES_PRIOR_MATCHES);
+    const winRate = total > 0 ? p.wins / total : 0;
+    return { ...p, total, winRate, rating };
+}
+
+function tierColor(rank, tierCount) {
+    if (tierCount <= 1) return { bg: 'rgba(15,61,46,0.75)', fg: 'var(--court-line)' };
+    const t = rank / (tierCount - 1); // 0 = giỏi nhất, 1 = yếu nhất
+    const alpha = 0.78 - 0.58 * t;
+    const fg = alpha > 0.42 ? 'var(--court-line)' : 'var(--ink)';
+    return { bg: `rgba(15,61,46,${alpha.toFixed(2)})`, fg };
+}
+
+function assignTiers(sorted) {
+    const tierCount = Math.min(8, Math.max(2, parseInt(els.tierCount.value) || 4));
+    const n = sorted.length;
+    return sorted.map((p, i) => {
+        const tierIdx = n <= 1 ? 0 : Math.min(tierCount - 1, Math.floor((i / n) * tierCount));
+        const label = tierIdx < TIER_NAMES.length ? TIER_NAMES[tierIdx] : `Bậc ${tierIdx + 1}`;
+        return { ...p, tierIdx, tierLabel: label };
+    });
+}
+
+let lastRanked = [];
+
+function updateRankings() {
+    if (!els.ratingTable) return;
+
+    if (ratingPlayers.length === 0) {
+        els.ratingEmpty.hidden = false;
+        els.ratingTable.hidden = true;
+        lastRanked = [];
+        renderPairingPlaceholder();
+        return;
+    }
+
+    els.ratingEmpty.hidden = true;
+    els.ratingTable.hidden = false;
+
+    const rated = ratingPlayers.map(computeRating);
+    rated.sort((a, b) => b.rating - a.rating || b.total - a.total);
+    const ranked = assignTiers(rated);
+    lastRanked = ranked;
+
+    const tierCountUsed = Math.min(8, Math.max(2, parseInt(els.tierCount.value) || 4));
+
+    els.ratingTableBody.innerHTML = '';
+    ranked.forEach((p, i) => {
+        const { bg, fg } = tierColor(p.tierIdx, tierCountUsed);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+      <td>${i + 1}</td>
+      <td>${p.name || '—'}</td>
+      <td>${p.wins}-${p.losses}</td>
+      <td>${p.total > 0 ? Math.round(p.winRate * 100) + '%' : '—'}</td>
+      <td>${(p.rating * 100).toFixed(1)}</td>
+      <td><span class="tier-badge" style="background:${bg};color:${fg};">${p.tierLabel}</span></td>
+    `;
+        els.ratingTableBody.appendChild(tr);
+    });
+}
+
+['tierCount'].forEach(id => {
+    if (els[id]) els[id].addEventListener('input', updateRankings);
+});
+if (els.addRatingBtn) els.addRatingBtn.addEventListener('click', () => addRatingPlayer());
+
+function renderPairingPlaceholder() {
+    if (els.pairingResults) {
+        els.pairingResults.innerHTML = '<p class="bye-note">Thêm người chơi và bấm "Ghép cặp ngay" để xem gợi ý.</p>';
+    }
+}
+
+function renderMatchCard(label, sideA, sideB, ratingA, ratingB) {
+    return `
+    <div class="match-card">
+      <div class="match-label">${label}</div>
+      <div class="match-sides">
+        <div class="match-side">${sideA}<span class="match-rating">Điểm đội: ${ratingA.toFixed(1)}</span></div>
+        <div class="match-vs">VS</div>
+        <div class="match-side" style="text-align:right;">${sideB}<span class="match-rating">Điểm đội: ${ratingB.toFixed(1)}</span></div>
+      </div>
+    </div>
+  `;
+}
+
+function generatePairing() {
+    if (!els.pairingResults) return;
+    if (lastRanked.length < 2) {
+        els.pairingResults.innerHTML = '<p class="bye-note">Cần ít nhất 2 người chơi để ghép cặp.</p>';
+        return;
+    }
+
+    const mode = els.matchMode ? els.matchMode.value : 'doubles';
+    const pool = [...lastRanked]; // already sorted best -> worst
+    let html = '';
+
+    if (mode === 'singles') {
+        // Ghép các đối thủ liền bậc (rank 1 vs 2, 3 vs 4, ...) để trận đấu sát nút.
+        let matchNo = 1;
+        for (let i = 0; i < pool.length - 1; i += 2) {
+            const a = pool[i], b = pool[i + 1];
+            html += renderMatchCard(`Trận ${matchNo++}`, a.name, b.name, a.rating * 100, b.rating * 100);
+        }
+        if (pool.length % 2 === 1) {
+            html += `<p class="bye-note">${pool[pool.length - 1].name} chưa có đối, ngồi ngoài chờ trận sau.</p>`;
+        }
+    } else {
+        // Ghép đôi: người mạnh nhất + người yếu nhất thành 1 đội (snake), để
+        // tổng điểm hai đội cân bằng nhau; sau đó xếp các đội có điểm gần
+        // nhau đấu với nhau.
+        let benched = null;
+        let active = pool;
+        if (active.length % 2 === 1) {
+            benched = active[active.length - 1];
+            active = active.slice(0, -1);
+        }
+
+        const teams = [];
+        let lo = 0, hi = active.length - 1;
+        while (lo < hi) {
+            const p1 = active[lo], p2 = active[hi];
+            teams.push({ players: [p1, p2], rating: (p1.rating + p2.rating) * 100 / 2 });
+            lo++; hi--;
+        }
+        teams.sort((a, b) => b.rating - a.rating);
+
+        let matchNo = 1;
+        for (let i = 0; i < teams.length - 1; i += 2) {
+            const A = teams[i], B = teams[i + 1];
+            html += renderMatchCard(
+                `Trận ${matchNo++}`,
+                `${A.players[0].name} &amp; ${A.players[1].name}`,
+                `${B.players[0].name} &amp; ${B.players[1].name}`,
+                A.rating, B.rating
+            );
+        }
+        if (teams.length % 2 === 1) {
+            const last = teams[teams.length - 1];
+            html += `<p class="bye-note">Đội ${last.players[0].name} & ${last.players[1].name} chưa có đội đối đầu, chờ trận sau.</p>`;
+        }
+        if (benched) {
+            html += `<p class="bye-note">${benched.name} dư ra do số người lẻ, ngồi ngoài chờ trận sau.</p>`;
+        }
+    }
+
+    els.pairingResults.innerHTML = html || '<p class="bye-note">Không đủ người để ghép cặp.</p>';
+}
+
+if (els.generatePairsBtn) els.generatePairsBtn.addEventListener('click', generatePairing);
+
+// Khởi tạo sẵn vài dòng mẫu để tab không trống trơn khi mới mở
+addRatingPlayer(0, 0);
+addRatingPlayer(0, 0);
+addRatingPlayer(0, 0);
+addRatingPlayer(0, 0);
